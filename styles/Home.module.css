@@ -101,6 +101,12 @@
   border-color: #0070f3;
 }
 
+.smallButton:disabled{
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+}
+
 .smallButton span {
   margin: 0;
   line-height: 1.5;

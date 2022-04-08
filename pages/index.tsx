@@ -90,8 +90,9 @@ const Home: NextPage = () => {
       accountAddress,
       accountAddress
     );
-    setAccountApproved(allowance > 0);
+    setAccountApproved(allowance != 0);
     console.log(allowance);
+    console.log(allowance != 0);
   };
 
   const setInputMaxBalance = () => {
@@ -154,9 +155,9 @@ const Home: NextPage = () => {
         </div>
         <div className={styles.grid}>
           {!accountAddress ? (
-            <div className={styles.button} onClick={connectWallet}>
+            <button className={styles.button} onClick={connectWallet}>
               <span className={styles.text}>Connect with MetaMask</span>
-            </div>
+            </button>
           ) : (
             <div className={styles.card}>
               {accountApproved ? (
@@ -189,11 +190,12 @@ const Home: NextPage = () => {
                     </div>
                   </div>
 
-                  <div className={styles.smallButton}>
-                    <span className={styles.text} onClick={supplyWithDai}>
-                      Supply with DAI
-                    </span>
-                  </div>
+                  <button
+                    className={styles.smallButton}
+                    onClick={supplyWithDai}
+                  >
+                    <span className={styles.text}>Supply with DAI</span>
+                  </button>
                 </>
               ) : (
                 <>
@@ -201,11 +203,13 @@ const Home: NextPage = () => {
                     First enable your wallet to spend tokens in our dApp
                   </span>
 
-                  <div className={styles.smallButton}>
-                    <div className={styles.text} onClick={approveToken}>
-                      Enable
-                    </div>
-                  </div>
+                  <button
+                    className={styles.smallButton}
+                    disabled={typeof accountApproved === "undefined"}
+                    onClick={approveToken}
+                  >
+                    <div className={styles.text}>Enable</div>
+                  </button>
                 </>
               )}
 
