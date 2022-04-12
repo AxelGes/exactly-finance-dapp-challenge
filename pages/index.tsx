@@ -28,6 +28,7 @@ const Home: NextPage = () => {
   const [inputBalance, setInputBalance] = useState<number>(0);
   const [inputErrorMsg, setInputErrorMsg] = useState<string>();
   const [txHistory, setTxHistory] = useState<any[]>();
+  const [pendingTx, setPendingTx] = useState<boolean>();
 
   const connectWallet = async () => {
     if (!window.ethereum || !window.ethereum.isMetaMask) {
@@ -37,6 +38,13 @@ const Home: NextPage = () => {
 
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+      const network = await provider.getNetwork();
+
+      if (network.chainId !== 42) {
+        alert("Please connect to the Kovan test network");
+        return;
+      }
 
       const compoundDaiContract = new ethers.Contract(
         CDAI_CONTRACT_ADDRESS,
@@ -88,7 +96,7 @@ const Home: NextPage = () => {
       )
     );
 
-    const allowance = await compoundDaiContract?.allowance(
+    const allowance = await daiContract?.allowance(
       accountAddress,
       accountAddress
     );
@@ -103,21 +111,24 @@ const Home: NextPage = () => {
     const provider = new ethers.providers.EtherscanProvider("kovan");
     const history = await provider.getHistory(accountAddress);
     setTxHistory(history.filter((tx) => tx.to === CDAI_CONTRACT_ADDRESS));
-    console.log(history);
   };
+
   const setInputMaxBalance = () => {
     daiBalance && setInputBalance(daiBalance);
   };
 
   const approveToken = async () => {
-    const approveTokenTx = await compoundDaiContract?.approve(
+    const approveTokenTx = await daiContract?.approve(
       accountAddress,
       ethers.constants.MaxUint256
     );
 
-    await approveTokenTx?.wait();
-
-    setAccountApproved(true);
+    setPendingTx(true);
+    approveTokenTx?.wait().then(() => {
+      getTxHistory(accountAddress as string);
+      setPendingTx(false);
+      setAccountApproved(true);
+    });
   };
 
   const supplyWithDai = async () => {
@@ -136,7 +147,12 @@ const Home: NextPage = () => {
 
     const mintTx = await compoundDaiContract?.mint(amount);
 
-    await mintTx?.wait();
+    setPendingTx(true);
+
+    await mintTx?.wait().then(() => {
+      getTxHistory(accountAddress as string);
+      setPendingTx(false);
+    });
   };
 
   const prettifyText = (text: string) => {
@@ -237,6 +253,9 @@ const Home: NextPage = () => {
                 )}
 
                 <span className={styles.error}>{inputErrorMsg}</span>
+                {pendingTx ? (
+                  <span className={styles.text}>Tx pending...</span>
+                ) : null}
               </div>
 
               {txHistory && txHistory.length > 0 ? (
