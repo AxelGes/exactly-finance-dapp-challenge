@@ -3,7 +3,7 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import { useState } from "react";
 import Image from "next/image";
-import styles from "../styles/Home.module.css";
+import styles from "../styles/Home.module.scss";
 import { compoundDaiContractABI } from "../utils/compoundDaiContractABI";
 import { daiContractABI } from "../utils/daiContractABI";
 
@@ -19,6 +19,7 @@ const DAI_CONTRACT_ADDRESS = "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa";
 const Home: NextPage = () => {
   const [accountAddress, setAccountAddress] = useState<string>();
   const [daiContract, setDaiContract] = useState<ethers.Contract>();
+  const [daiDecimals, setDaiDecimals] = useState<number>();
   const [compoundDaiContract, setCompoundDaiContract] =
     useState<ethers.Contract>();
   const [compoundDaiBalance, setCompoundDaiBalance] = useState<number>();
@@ -26,6 +27,7 @@ const Home: NextPage = () => {
   const [accountApproved, setAccountApproved] = useState<boolean>();
   const [inputBalance, setInputBalance] = useState<number>(0);
   const [inputErrorMsg, setInputErrorMsg] = useState<string>();
+  const [txHistory, setTxHistory] = useState<any[]>();
 
   const connectWallet = async () => {
     if (!window.ethereum || !window.ethereum.isMetaMask) {
@@ -91,10 +93,18 @@ const Home: NextPage = () => {
       accountAddress
     );
     setAccountApproved(allowance != 0);
-    console.log(allowance);
-    console.log(allowance != 0);
+
+    getTxHistory(accountAddress);
   };
 
+  const getTxHistory = async (accountAddress: string) => {
+    if (!accountAddress) return;
+
+    const provider = new ethers.providers.EtherscanProvider("kovan");
+    const history = await provider.getHistory(accountAddress);
+    setTxHistory(history.filter((tx) => tx.to === CDAI_CONTRACT_ADDRESS));
+    console.log(history);
+  };
   const setInputMaxBalance = () => {
     daiBalance && setInputBalance(daiBalance);
   };
@@ -116,14 +126,21 @@ const Home: NextPage = () => {
       return;
     }
 
+    const daiDecimals = await daiContract?.decimals();
+    setDaiDecimals(daiDecimals);
+
     const amount = ethers.utils.parseUnits(
       inputBalance.toString(),
-      await daiContract?.decimals()
+      daiDecimals
     );
 
     const mintTx = await compoundDaiContract?.mint(amount);
 
     await mintTx?.wait();
+  };
+
+  const prettifyText = (text: string) => {
+    return text.substring(0, 4) + "..." + text.substring(text.length - 4);
   };
 
   return (
@@ -159,62 +176,94 @@ const Home: NextPage = () => {
               <span className={styles.text}>Connect with MetaMask</span>
             </button>
           ) : (
-            <div className={styles.card}>
-              {accountApproved ? (
-                <>
-                  <div className={styles.inputCard}>
-                    <input
-                      type={"number"}
-                      step={"0.1"}
-                      className={styles.input}
-                      onChange={(e) =>
-                        setInputBalance(parseFloat(e.target.value))
-                      }
-                      value={inputBalance}
-                    />
-                    <div className={styles.currencyCard}>
-                      <Image src="/dai.svg" alt="DAI" width={30} height={20} />
-                      <span className={styles.text}>DAI</span>
+            <>
+              <div className={styles.card}>
+                {accountApproved ? (
+                  <>
+                    <div className={styles.inputCard}>
+                      <input
+                        type={"number"}
+                        step={"0.1"}
+                        className={styles.input}
+                        onChange={(e) =>
+                          setInputBalance(parseFloat(e.target.value))
+                        }
+                        value={inputBalance}
+                      />
+                      <div className={styles.currencyCard}>
+                        <Image
+                          src="/dai.svg"
+                          alt="DAI"
+                          width={30}
+                          height={20}
+                        />
+                        <span className={styles.text}>DAI</span>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className={styles.balanceCard}>
-                    <span className={styles.text}>
-                      Balance: {daiBalance ? daiBalance : "-"}
-                    </span>
-                    <div
-                      className={styles.highlighted}
-                      onClick={setInputMaxBalance}
+                    <div className={styles.balanceCard}>
+                      <span className={styles.text}>
+                        Balance: {daiBalance ? daiBalance : "-"}
+                      </span>
+                      <div
+                        className={styles.highlighted}
+                        onClick={setInputMaxBalance}
+                      >
+                        max
+                      </div>
+                    </div>
+
+                    <button
+                      className={styles.smallButton}
+                      onClick={supplyWithDai}
                     >
-                      max
-                    </div>
-                  </div>
+                      <span className={styles.text}>Supply with DAI</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span>
+                      First enable your wallet to spend tokens in our dApp
+                    </span>
 
-                  <button
-                    className={styles.smallButton}
-                    onClick={supplyWithDai}
-                  >
-                    <span className={styles.text}>Supply with DAI</span>
-                  </button>
-                </>
+                    <button
+                      className={styles.smallButton}
+                      disabled={typeof accountApproved === "undefined"}
+                      onClick={approveToken}
+                    >
+                      <div className={styles.text}>Enable</div>
+                    </button>
+                  </>
+                )}
+
+                <span className={styles.error}>{inputErrorMsg}</span>
+              </div>
+
+              {txHistory && txHistory.length > 0 ? (
+                <div className={styles.historyCard}>
+                  <table>
+                    <tr>
+                      <th>Hash</th>
+                      <th>From</th>
+                      <th>To</th>
+                      <th>Value</th>
+                    </tr>
+                    {txHistory.map((tx, index) => (
+                      <tr key={index}>
+                        <th className={styles.text}>{prettifyText(tx.hash)}</th>
+                        <th className={styles.text}>{prettifyText(tx.from)}</th>
+                        <th className={styles.text}>{prettifyText(tx.to)}</th>
+                        <th className={styles.text}>
+                          {ethers.utils.formatUnits(tx.value, daiDecimals)}
+                        </th>
+                      </tr>
+                    ))}
+                  </table>
+                </div>
               ) : (
-                <>
-                  <span>
-                    First enable your wallet to spend tokens in our dApp
-                  </span>
-
-                  <button
-                    className={styles.smallButton}
-                    disabled={typeof accountApproved === "undefined"}
-                    onClick={approveToken}
-                  >
-                    <div className={styles.text}>Enable</div>
-                  </button>
-                </>
+                <span className={styles.grayText}>No TX registered</span>
               )}
-
-              <span className={styles.error}>{inputErrorMsg}</span>
-            </div>
+            </>
           )}
         </div>
       </main>

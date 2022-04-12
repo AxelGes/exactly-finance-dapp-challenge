@@ -16,14 +16,11 @@
   margin: 0;
   line-height: 1.15;
   font-size: 4rem;
-}
-
-.title,
-.description {
   text-align: center;
 }
 
 .description {
+  text-align: center;
   margin: 4rem 0;
   line-height: 1.5;
   font-size: 1.5rem;
@@ -34,6 +31,7 @@
   align-items: center;
   justify-content: center;
   max-width: 800px;
+  flex-direction: column;
 }
 
 .card {
@@ -50,6 +48,20 @@
   width: 300px;
 }
 
+.historyCard {
+  margin: 1rem;
+  padding: 1rem;
+  text-align: center;
+  color: inherit;
+  text-decoration: none;
+  border: 1px solid #7e7e7e;
+  border-radius: 10px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  width: 800px;
+}
+
 .button {
   margin: 1rem;
   padding: 1.25rem;
@@ -61,24 +73,22 @@
   transition: color 0.15s ease, border-color 0.15s ease;
   max-width: 300px;
   cursor: pointer;
-}
 
-.button:hover,
-.button:focus,
-.button:active {
-  color: #0070f3;
-  border-color: #0070f3;
-}
+  &:hover, &:focus, &:active {
+    color: #0070f3;
+    border-color: #0070f3;
+  }
 
-.button h2 {
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
-}
+  h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
+  }
 
-.button span {
-  margin: 0;
-  font-size: 1.25rem;
-  line-height: 1.5;
+  span {
+    margin: 0;
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
 }
 
 .smallButton {
@@ -92,24 +102,22 @@
   transition: color 0.15s ease, border-color 0.15s ease;
   max-width: 300px;
   cursor: pointer;
-}
 
-.smallButton:hover,
-.smallButton:focus,
-.smallButton:active {
-  color: #0070f3;
-  border-color: #0070f3;
-}
+  &:hover, &:focus, &:active {
+    color: #0070f3;
+    border-color: #0070f3;
+  }
 
-.smallButton:disabled{
-  border: 1px solid #999999;
-  background-color: #cccccc;
-  color: #666666;
-}
+  &:disabled {
+    border: 1px solid #999999;
+    background-color: #cccccc;
+    color: #666666;
+  }
 
-.smallButton span {
-  margin: 0;
-  line-height: 1.5;
+  span {
+    margin: 0;
+    line-height: 1.5;
+  }
 }
 
 .highlighted {
@@ -120,22 +128,22 @@
   cursor: pointer;
 }
 
-.balanceCard{
+.balanceCard {
   display: flex;
   justify-content: flex-end;
 }
 
-.inputCard{
+.inputCard {
   display: flex;
   justify-content: space-between;
 }
 
-.input{
+.input {
   border: 1px solid #7e7e7e;
   border-radius: 10px;
 }
 
-.currencyCard{
+.currencyCard {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -144,14 +152,20 @@
   border-radius: 10px;
 }
 
-.error{
+.text {
+  font-weight: 400;
+}
+
+.grayText {
+  color: #999999;
+}
+
+.error {
   color: #ff3333;
 }
 
-
 @media (max-width: 600px) {
-  .grid {
+  .grid, .card, .historyCard {
     width: 100%;
-    flex-direction: column;
   }
 }
